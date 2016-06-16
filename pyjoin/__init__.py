@@ -8,5 +8,8 @@ def get_devices(api_key):
     devices_json = requests.get(LIST_URL + api_key).json()['records']
     return [(d['deviceName'], d['deviceId']) for d in devices_json]
 
-def send_notification(device_id, title, text):
-    requests.get(SEND_URL + device_id + "&title=" + title + "&text=" + text)
+def send_notification(device_id, title, text, api_key=None):
+    if api_key:
+        requests.get(SEND_URL + device_id + "&title=" + title + "&text=" + text + "&apikey=" + api_key)
+    else:
+        requests.get(SEND_URL + device_id + "&title=" + title + "&text=" + text)
