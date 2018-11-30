@@ -10,11 +10,12 @@ def get_devices(api_key):
         return [(r['deviceName'], r['deviceId']) for r in response['records']]
     return False
 
-def send_notification(api_key, text, device_id=None, device_ids=None, device_names=None, title=None, icon=None, smallicon=None, vibration=None):
+def send_notification(api_key, text, device_id=None, device_ids=None, device_names=None, title=None, icon=None, smallicon=None, vibration=None, image=None):
     if device_id is None and device_ids is None and device_names is None: return False
     req_url = SEND_URL + api_key + "&text=" + text
     if title: req_url += "&title=" + title
     if icon: req_url += "&icon=" + icon
+    if image: req_url += "&image=" + image
     if smallicon: req_url += "&smallicon=" + smallicon
     if vibration: req_url += "&vibration=" + vibration
     if device_id: req_url += "&deviceId=" + device_id
