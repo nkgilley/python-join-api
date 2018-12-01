@@ -33,10 +33,9 @@ SOFTWARE.
 """
 
 setup(name='python-join-api',
-      version='0.0.2',
+      version='0.0.3',
       description='Python API for interacting with Join by joaoapps.',
       url='https://github.com/nkgilley/python-join-api',
-      download_url='https://github.com/nkgilley/python-join-api/archive/0.0.2.tar.gz',
       author='Nolan Gilley',
       author_email='nkgilley@gmail.com',
       license='MIT',
