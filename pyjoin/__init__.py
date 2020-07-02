@@ -51,8 +51,8 @@ class Listener:
     def run(self):
         self.app.run(host="0.0.0.0", port=self.port, debug=False, use_reloader=False)
 
-    def add_endpoint(self, endpoint=None, endpoint_name=None, handler=None):
-        self.app.add_url_rule(endpoint, endpoint_name, Action(handler),methods=["GET","POST"])
+    def add_callback(self, handler=None):
+        self.app.add_url_rule("/push", self.name, Action(handler),methods=["POST"])
 
     def register(self):
         data = {
