@@ -1,9 +1,77 @@
 """Python API for using Join by joaoapps."""
 import requests
+from flask import request, Response, Flask
+import os 
 
 SEND_URL = "https://joinjoaomgcd.appspot.com/_ah/api/messaging/v1/sendPush?apikey="
 LIST_URL = "https://joinjoaomgcd.appspot.com/_ah/api/registration/v1/listDevices?apikey="
+REGISTER_URL = "https://joinjoaomgcd.appspot.com/_ah/api/registration/v1/registerDevice/"
+PUBLIC_IP_URL = "https://api.ipify.org"
+DEFAULT_PORT = "1820"
 
+
+class Action(object):
+
+        def __init__(self, action):
+            self.action = action
+            self.response = Response(status=200, headers={"Content-Type": "text/html"})
+
+        def __call__(self, *args):
+            data = request.json
+            if self.action:
+                self.action(data)
+            return self.response
+
+class Listener:
+    def __init__(self, name, port, api_key,public_ip=None):
+        self.api_key = api_key
+        self.name = name
+        self.port = port 
+        if public_ip == None:
+            self.public_ip = self.get_public_ip()
+        else:
+            self.public_ip = public_ip
+
+        if port == None:
+            self.port = DEFAULT_PORT
+        else:
+            self.port = port
+
+        self.deviceID = self.get_device_id()
+        self.app = Flask(self.name)
+
+    def get_device_id(self):
+        devices = get_devices(self.api_key)
+        for d in devices:
+            name, id = d
+            if name == self.name:
+                return id
+        return self.register() 
+
+    def run(self):
+        self.app.run(host="0.0.0.0", port=self.port, debug=False, use_reloader=False)
+
+    def add_callback(self, handler=None):
+        self.app.add_url_rule("/push", self.name, Action(handler),methods=["POST"])
+
+    def register(self):
+        data = {
+            "apikey": self.api_key,
+            "regId": "{}:{}".format(self.public_ip,self.port),
+            "deviceName": self.name, 
+            "deviceType": 13
+        }
+        r = requests.post(REGISTER_URL, data = data)
+        if r.status_code!=200:
+            raise Exception("Unable to register to join")
+        return r.json().get("deviceId")
+
+    def get_public_ip(self):
+        r = requests.get(PUBLIC_IP_URL)
+        if r.status_code !=200:
+            raise Exception("Unable to get public IP")
+        return r.text
+    
 def get_devices(api_key):
     response = requests.get(LIST_URL + api_key).json()
     if response.get('success') and not response.get('userAuthError'):

@@ -39,6 +39,6 @@ setup(name='python-join-api',
       author='Nolan Gilley',
       author_email='nkgilley@gmail.com',
       license='MIT',
-      install_requires=['requests>=2.0'],
+      install_requires=['requests>=2.0','flask>=1.1.2'],
       packages=['pyjoin'],
       zip_safe=True)
