@@ -10,7 +10,7 @@ def get_devices(api_key):
         return [(r['deviceName'], r['deviceId']) for r in response['records']]
     return False
 
-def send_notification(api_key, text, device_id=None, device_ids=None, device_names=None, title=None, icon=None, smallicon=None, vibration=None, image=None, url=None, tts=None, tts_language=None, sound=None, notification_id=None):
+def send_notification(api_key, text, device_id=None, device_ids=None, device_names=None, title=None, icon=None, smallicon=None, vibration=None, image=None, url=None, tts=None, tts_language=None, sound=None, notification_id=None, actions=None):
     if device_id is None and device_ids is None and device_names is None: return False
     req_url = SEND_URL + api_key + "&text=" + text
     if title: req_url += "&title=" + title
@@ -26,6 +26,7 @@ def send_notification(api_key, text, device_id=None, device_ids=None, device_nam
     if device_id: req_url += "&deviceId=" + device_id
     if device_ids: req_url += "&deviceIds=" + device_ids
     if device_names: req_url += "&deviceNames=" + device_names
+    if actions: req_url += "&actions=" + "|||".join(actions)
     requests.get(req_url)
 
 def ring_device(api_key, device_id=None, device_ids=None, device_names=None):
