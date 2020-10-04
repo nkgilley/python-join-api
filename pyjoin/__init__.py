@@ -148,3 +148,10 @@ def send_sms(api_key, sms_number, sms_text, device_id=None, device_ids=None, dev
     if device_names: req_url += "&deviceNames=" + device_names
     requests.get(req_url)
 
+def set_mediavolume(api_key, mediavolume, device_id=None, device_ids=None, device_names=None):
+    if device_id is None and device_ids is None and device_names is None: return False
+    req_url = SEND_URL + api_key + "&mediaVolume=" + mediavolume
+    if device_id: req_url += "&deviceId=" + device_id
+    if device_ids: req_url += "&deviceIds=" + device_ids
+    if device_names: req_url += "&deviceNames=" + device_names
+    requests.get(req_url)
