@@ -2,9 +2,9 @@
 Python API for Join by Joao
 
 ### Actions
-Join actions should be provided as a dictionary. Each keys is an action name, and each value is a list of the custome inputs.  Use `None` for no custom input.  For example:
-```json
-{"Netflix":None, "Tweet": ["test tweet!"]}
+Join actions should be provided as a dictionary. Each key is an action name, and each value is a list of the custom inputs.  Use `None` for no custom input.  For example:
+```
+{"Netflix": None, "Tweet": ["test tweet!"]}
 ```
 
 ### To use the listener:
