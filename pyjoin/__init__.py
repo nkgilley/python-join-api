@@ -89,7 +89,7 @@ def get_devices(api_key):
           s = file.read()
         o = json.loads(s)
         return o
-    return Fals
+    return False
 
 def send_notification(api_key, text, device_id=None, device_ids=None, device_names=None, title=None, icon=None, smallicon=None, vibration=None, image=None, url=None, tts=None, tts_language=None, sound=None, notification_id=None, category=None, actions=None):
     if device_id is None and device_ids is None and device_names is None: return False
