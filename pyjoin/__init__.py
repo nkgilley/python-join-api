@@ -1,7 +1,8 @@
 """Python API for using Join by joaoapps."""
 import requests
 from flask import request, Response, Flask
-import os 
+import os
+import json
 
 SEND_URL = "https://joinjoaomgcd.appspot.com/_ah/api/messaging/v1/sendPush?apikey="
 LIST_URL = "https://joinjoaomgcd.appspot.com/_ah/api/registration/v1/listDevices?apikey="
