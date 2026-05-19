@@ -74,9 +74,22 @@ class Listener:
     
 def get_devices(api_key):
     response = requests.get(LIST_URL + api_key).json()
+
+    mypath = os.path.dirname(__file__)
+
     if response.get('success') and not response.get('userAuthError'):
+        js = json.dumps([(r['deviceName'], r['deviceId']) for r in response['records']])
+        with open(mypath+'/'+api_key+'.json', 'w')  as fh:
+          fh.write(js)
         return [(r['deviceName'], r['deviceId']) for r in response['records']]
-    return False
+    else:
+
+      if os.path.isfile(mypath+'/'+api_key+'.json'):
+        with open(mypath+'/'+api_key+'.json', 'r') as file:
+          s = file.read()
+        o = json.loads(s)
+        return o
+    return Fals
 
 def send_notification(api_key, text, device_id=None, device_ids=None, device_names=None, title=None, icon=None, smallicon=None, vibration=None, image=None, url=None, tts=None, tts_language=None, sound=None, notification_id=None, category=None, actions=None):
     if device_id is None and device_ids is None and device_names is None: return False
