@@ -33,7 +33,7 @@ SOFTWARE.
 """
 
 setup(name='python-join-api',
-      version='0.0.9',
+      version='0.1.0',
       description='Python API for interacting with Join by joaoapps.',
       url='https://github.com/nkgilley/python-join-api',
       author='Nolan Gilley',
