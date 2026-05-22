@@ -1,10 +1,14 @@
 """Python API for using Join by joaoapps."""
+import datetime
 import hashlib
 import json
+import logging
 import os
 import tempfile
 import requests
 from flask import request, Response, Flask 
+
+_LOGGER = logging.getLogger(__name__)
 
 SEND_URL = "https://joinjoaomgcd.appspot.com/_ah/api/messaging/v1/sendPush?apikey="
 LIST_URL = "https://joinjoaomgcd.appspot.com/_ah/api/registration/v1/listDevices?apikey="
@@ -101,42 +105,53 @@ def _get_cache_path(api_key):
 
 
 def get_devices(api_key):
-    """Retrieve devices from Join API, with robust offline caching support."""
+    """Retrieve devices from Join API, with robust offline caching and logging."""
     success = False
     devices = []
     
     try:
-        # Wrap the API call and JSON parsing to handle network outages gracefully
         response = requests.get(LIST_URL + api_key, timeout=10)
         response.raise_for_status()
         resp_json = response.json()
         if resp_json.get('success') and not resp_json.get('userAuthError'):
             devices = [(r['deviceName'], r['deviceId']) for r in resp_json['records']]
             success = True
-    except Exception:
-        # Network outage, timeout, or server error encountered
-        pass
+        else:
+            _LOGGER.error(
+                "Join API returned an error (success: %s, authError: %s). Check your API key.",
+                resp_json.get('success'),
+                resp_json.get('userAuthError')
+            )
+    except Exception as err:
+        _LOGGER.warning("Failed to connect to Join API: %s. Falling back to offline cache.", err)
 
     if success:
-        # Successfully fetched from API; update cache
         cache_path = _get_cache_path(api_key)
         if cache_path:
             try:
                 with open(cache_path, 'w') as fh:
                     json.dump(devices, fh)
-            except Exception:
-                # Fail silently if cache is unwritable to avoid disrupting normal API operations
-                pass
+            except Exception as err:
+                _LOGGER.debug("Failed to write to offline cache: %s", err)
         return devices
     else:
-        # Fetch failed; try loading from offline cache
         cache_path = _get_cache_path(api_key)
         if cache_path and os.path.isfile(cache_path):
             try:
+                mtime = os.path.getmtime(cache_path)
+                cache_time = datetime.datetime.fromtimestamp(mtime)
+                cache_age = datetime.datetime.now() - cache_time
+                _LOGGER.warning(
+                    "Loading offline cached devices. (Cache file was last updated %d days ago at %s)",
+                    cache_age.days,
+                    cache_time.strftime('%Y-%m-%d %H:%M:%S')
+                )
                 with open(cache_path, 'r') as fh:
                     return json.load(fh)
-            except Exception:
-                pass
+            except Exception as err:
+                _LOGGER.error("Failed to read from offline cache: %s", err)
+        
+        _LOGGER.critical("Join API call failed and no offline cache is available.")
         return False
 
 def send_notification(api_key, text, device_id=None, device_ids=None, device_names=None, title=None, icon=None, smallicon=None, vibration=None, image=None, url=None, tts=None, tts_language=None, sound=None, notification_id=None, category=None, actions=None):
