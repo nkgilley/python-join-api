@@ -8,8 +8,8 @@ try:
 except ImportError:
     from distutils.core import setup
 
-if sys.argv[-1] == 'publish':
-    os.system('python setup.py sdist upload')
+if sys.argv[-1] == "publish":
+    os.system("python setup.py sdist upload")
     sys.exit()
 
 license = """
@@ -32,13 +32,15 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-setup(name='python-join-api',
-      version='0.1.0',
-      description='Python API for interacting with Join by joaoapps.',
-      url='https://github.com/nkgilley/python-join-api',
-      author='Nolan Gilley',
-      author_email='nkgilley@gmail.com',
-      license='MIT',
-      install_requires=['requests>=2.0','flask>=1.1.2'],
-      packages=['pyjoin'],
-      zip_safe=True)
+setup(
+    name="python-join-api",
+    version="0.1.1",
+    description="Python API for interacting with Join by joaoapps.",
+    url="https://github.com/nkgilley/python-join-api",
+    author="Nolan Gilley",
+    author_email="nkgilley@gmail.com",
+    license="MIT",
+    install_requires=["requests>=2.0", "flask>=1.1.2", "yarl"],
+    packages=["pyjoin"],
+    zip_safe=True,
+)

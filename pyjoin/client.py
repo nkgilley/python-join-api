@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import requests
+import yarl
 
 from .const import SEND_URL, LIST_URL
 from .cache import _get_cache_path
@@ -16,7 +17,8 @@ def get_devices(api_key):
     devices = []
     
     try:
-        response = requests.get(LIST_URL + api_key, timeout=10)
+        url = yarl.URL(LIST_URL + api_key)
+        response = requests.get(str(url), timeout=10)
         response.raise_for_status()
         resp_json = response.json()
         if resp_json.get('success') and not resp_json.get('userAuthError'):
@@ -62,21 +64,23 @@ def get_devices(api_key):
 
 def send_notification(api_key, text, device_id=None, device_ids=None, device_names=None, title=None, icon=None, smallicon=None, vibration=None, image=None, url=None, tts=None, tts_language=None, sound=None, notification_id=None, category=None, actions=None):
     if device_id is None and device_ids is None and device_names is None: return False
-    req_url = SEND_URL + api_key + "&text=" + text
-    if title: req_url += "&title=" + title
-    if icon: req_url += "&icon=" + icon
-    if image: req_url += "&image=" + image
-    if smallicon: req_url += "&smallicon=" + smallicon
-    if vibration: req_url += "&vibration=" + vibration
-    if url: req_url += "&url=" + url
-    if tts: req_url += "&say=" + tts
-    if tts_language: req_url += "&language=" + tts_language
-    if sound: req_url += "&sound=" + sound
-    if notification_id: req_url += "&notificationId=" + notification_id
-    if category: req_url += "&category=" + category
-    if device_id: req_url += "&deviceId=" + device_id
-    if device_ids: req_url += "&deviceIds=" + device_ids
-    if device_names: req_url += "&deviceNames=" + device_names
+    params = {
+        "text": text,
+        "title": title,
+        "icon": icon,
+        "image": image,
+        "smallicon": smallicon,
+        "vibration": vibration,
+        "url": url,
+        "say": tts,
+        "language": tts_language,
+        "sound": sound,
+        "notificationId": notification_id,
+        "category": category,
+        "deviceId": device_id,
+        "deviceIds": device_ids,
+        "deviceNames": device_names,
+    }
     if actions:
         action_strings = []
         for action in actions:
@@ -84,57 +88,84 @@ def send_notification(api_key, text, device_id=None, device_ids=None, device_nam
             if actions[action]:
                 action_str += "=:=" + "=:=".join(actions[action])
             action_strings.append(action_str)
-        req_url += "&actions=" + "|||".join(action_strings)
-    requests.get(req_url)
+        params["actions"] = "|||".join(action_strings)
+    clean_params = {k: v for k, v in params.items() if v is not None}
+    req_url = yarl.URL(SEND_URL + api_key).update_query(clean_params)
+    requests.get(str(req_url))
 
 def ring_device(api_key, device_id=None, device_ids=None, device_names=None):
     if device_id is None and device_ids is None and device_names is None: return False
-    req_url = SEND_URL + api_key + "&find=true"
-    if device_id: req_url += "&deviceId=" + device_id
-    if device_ids: req_url += "&deviceIds=" + device_ids
-    if device_names: req_url += "&deviceNames=" + device_names
-    requests.get(req_url)
+    params = {
+        "find": "true",
+        "deviceId": device_id,
+        "deviceIds": device_ids,
+        "deviceNames": device_names,
+    }
+    clean_params = {k: v for k, v in params.items() if v is not None}
+    req_url = yarl.URL(SEND_URL + api_key).update_query(clean_params)
+    requests.get(str(req_url))
 
 def send_url(api_key, url, device_id=None, device_ids=None, device_names=None, title=None, text=None):
     if device_id is None and device_ids is None and device_names is None: return False
-    req_url = SEND_URL + api_key + "&url=" + url
-    if title: req_url += "&title=" + title
-    req_url += "&text=" + text if text else "&text="
-    if device_id: req_url += "&deviceId=" + device_id
-    if device_ids: req_url += "&deviceIds=" + device_ids
-    if device_names: req_url += "&deviceNames=" + device_names
-    requests.get(req_url)
+    params = {
+        "url": url,
+        "title": title,
+        "text": text if text else "",
+        "deviceId": device_id,
+        "deviceIds": device_ids,
+        "deviceNames": device_names,
+    }
+    clean_params = {k: v for k, v in params.items() if v is not None}
+    req_url = yarl.URL(SEND_URL + api_key).update_query(clean_params)
+    requests.get(str(req_url))
 
 def set_wallpaper(api_key, url, device_id=None, device_ids=None, device_names=None):
     if device_id is None and device_ids is None and device_names is None: return False
-    req_url = SEND_URL + api_key + "&wallpaper=" + url
-    if device_id: req_url += "&deviceId=" + device_id
-    if device_ids: req_url += "&deviceIds=" + device_ids
-    if device_names: req_url += "&deviceNames=" + device_names
-    requests.get(req_url)
+    params = {
+        "wallpaper": url,
+        "deviceId": device_id,
+        "deviceIds": device_ids,
+        "deviceNames": device_names,
+    }
+    clean_params = {k: v for k, v in params.items() if v is not None}
+    req_url = yarl.URL(SEND_URL + api_key).update_query(clean_params)
+    requests.get(str(req_url))
 
 def send_file(api_key, url, device_id=None, device_ids=None, device_names=None, title=None, text=None):
     if device_id is None and device_ids is None and device_names is None: return False
-    req_url = SEND_URL + api_key + "&file=" + url
-    if title: req_url += "&title=" + title
-    req_url += "&text=" + text if text else "&text="
-    if device_id: req_url += "&deviceId=" + device_id
-    if device_ids: req_url += "&deviceIds=" + device_ids
-    if device_names: req_url += "&deviceNames=" + device_names
-    requests.get(req_url)
+    params = {
+        "file": url,
+        "title": title,
+        "text": text if text else "",
+        "deviceId": device_id,
+        "deviceIds": device_ids,
+        "deviceNames": device_names,
+    }
+    clean_params = {k: v for k, v in params.items() if v is not None}
+    req_url = yarl.URL(SEND_URL + api_key).update_query(clean_params)
+    requests.get(str(req_url))
 
 def send_sms(api_key, sms_number, sms_text, device_id=None, device_ids=None, device_names=None):
     if device_id is None and device_ids is None and device_names is None: return False
-    req_url = SEND_URL + api_key + "&smsnumber=" + sms_number + "&smstext=" + sms_text
-    if device_id: req_url += "&deviceId=" + device_id
-    if device_ids: req_url += "&deviceIds=" + device_ids
-    if device_names: req_url += "&deviceNames=" + device_names
-    requests.get(req_url)
+    params = {
+        "smsnumber": sms_number,
+        "smstext": sms_text,
+        "deviceId": device_id,
+        "deviceIds": device_ids,
+        "deviceNames": device_names,
+    }
+    clean_params = {k: v for k, v in params.items() if v is not None}
+    req_url = yarl.URL(SEND_URL + api_key).update_query(clean_params)
+    requests.get(str(req_url))
 
 def set_mediavolume(api_key, mediavolume, device_id=None, device_ids=None, device_names=None):
     if device_id is None and device_ids is None and device_names is None: return False
-    req_url = SEND_URL + api_key + "&mediaVolume=" + mediavolume
-    if device_id: req_url += "&deviceId=" + device_id
-    if device_ids: req_url += "&deviceIds=" + device_ids
-    if device_names: req_url += "&deviceNames=" + device_names
-    requests.get(req_url)
+    params = {
+        "mediaVolume": mediavolume,
+        "deviceId": device_id,
+        "deviceIds": device_ids,
+        "deviceNames": device_names,
+    }
+    clean_params = {k: v for k, v in params.items() if v is not None}
+    req_url = yarl.URL(SEND_URL + api_key).update_query(clean_params)
+    requests.get(str(req_url))

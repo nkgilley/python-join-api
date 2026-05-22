@@ -129,5 +129,103 @@ class TestPyJoinDevicesCache(unittest.TestCase):
         # Assert error log was called
         mock_logger.error.assert_called()
 
+class TestPyJoinUrlEncoding(unittest.TestCase):
+
+    def setUp(self):
+        self.api_key = "test_api_key_123"
+
+    @patch('requests.get')
+    def test_send_notification_encoding(self, mock_get):
+        """Test send_notification encodes spaces and special characters."""
+        pyjoin.send_notification(
+            api_key=self.api_key,
+            text="Hello & welcome!",
+            device_id="phone 123",
+            title="Notification Title / Subtitle"
+        )
+        mock_get.assert_called_once()
+        called_url = mock_get.call_args[0][0]
+        self.assertIn("text=Hello+%26+welcome!", called_url)
+        self.assertIn("deviceId=phone+123", called_url)
+        self.assertIn("title=Notification+Title+/+Subtitle", called_url)
+
+    @patch('requests.get')
+    def test_ring_device_encoding(self, mock_get):
+        pyjoin.ring_device(
+            api_key=self.api_key,
+            device_id="phone 123"
+        )
+        mock_get.assert_called_once()
+        called_url = mock_get.call_args[0][0]
+        self.assertIn("find=true", called_url)
+        self.assertIn("deviceId=phone+123", called_url)
+
+    @patch('requests.get')
+    def test_send_url_encoding(self, mock_get):
+        pyjoin.send_url(
+            api_key=self.api_key,
+            url="https://example.com/some path?a=1&b=2",
+            device_id="phone 123",
+            title="My Cool Site & More"
+        )
+        mock_get.assert_called_once()
+        called_url = mock_get.call_args[0][0]
+        self.assertIn("url=https://example.com/some+path?a%3D1%26b%3D2", called_url)
+        self.assertIn("title=My+Cool+Site+%26+More", called_url)
+        self.assertIn("deviceId=phone+123", called_url)
+
+    @patch('requests.get')
+    def test_set_wallpaper_encoding(self, mock_get):
+        pyjoin.set_wallpaper(
+            api_key=self.api_key,
+            url="https://example.com/wall paper.png",
+            device_id="phone 123"
+        )
+        mock_get.assert_called_once()
+        called_url = mock_get.call_args[0][0]
+        self.assertIn("wallpaper=https://example.com/wall+paper.png", called_url)
+        self.assertIn("deviceId=phone+123", called_url)
+
+    @patch('requests.get')
+    def test_send_file_encoding(self, mock_get):
+        pyjoin.send_file(
+            api_key=self.api_key,
+            url="https://example.com/my file.pdf",
+            device_id="phone 123",
+            title="File & Attachment"
+        )
+        mock_get.assert_called_once()
+        called_url = mock_get.call_args[0][0]
+        self.assertIn("file=https://example.com/my+file.pdf", called_url)
+        self.assertIn("title=File+%26+Attachment", called_url)
+        self.assertIn("deviceId=phone+123", called_url)
+
+    @patch('requests.get')
+    def test_send_sms_encoding(self, mock_get):
+        pyjoin.send_sms(
+            api_key=self.api_key,
+            sms_number="+1 234 567 890",
+            sms_text="Hello world! & more text",
+            device_id="phone 123"
+        )
+        mock_get.assert_called_once()
+        called_url = mock_get.call_args[0][0]
+        self.assertIn("smsnumber=%2B1+234+567+890", called_url)
+        self.assertIn("smstext=Hello+world!+%26+more+text", called_url)
+        self.assertIn("deviceId=phone+123", called_url)
+
+    @patch('requests.get')
+    def test_set_mediavolume_encoding(self, mock_get):
+        pyjoin.set_mediavolume(
+            api_key=self.api_key,
+            mediavolume="50 percent",
+            device_id="phone 123"
+        )
+        mock_get.assert_called_once()
+        called_url = mock_get.call_args[0][0]
+        self.assertIn("mediaVolume=50+percent", called_url)
+        self.assertIn("deviceId=phone+123", called_url)
+
 if __name__ == '__main__':
     unittest.main()
+
