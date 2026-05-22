@@ -60,7 +60,7 @@ class TestPyJoinDevicesCache(unittest.TestCase):
             self.assertEqual(cached_data, [["My Phone", "phone123"], ["My Tablet", "tablet456"]])
 
     @patch('requests.get')
-    @patch('pyjoin._LOGGER')
+    @patch('pyjoin.client._LOGGER')
     def test_get_devices_offline_fallback(self, mock_logger, mock_get):
         """Test that get_devices falls back to the cache when the network is down."""
         # 1. Populate the cache manually first
@@ -83,7 +83,7 @@ class TestPyJoinDevicesCache(unittest.TestCase):
         mock_logger.warning.assert_called()
 
     @patch('requests.get')
-    @patch('pyjoin._LOGGER')
+    @patch('pyjoin.client._LOGGER')
     def test_get_devices_offline_no_cache(self, mock_logger, mock_get):
         """Test that get_devices returns False and logs a critical error when offline and no cache is found."""
         # Ensure no cache exists
@@ -103,7 +103,7 @@ class TestPyJoinDevicesCache(unittest.TestCase):
         mock_logger.critical.assert_called_with("Join API call failed and no offline cache is available.")
 
     @patch('requests.get')
-    @patch('pyjoin._LOGGER')
+    @patch('pyjoin.client._LOGGER')
     def test_get_devices_auth_error_fallback(self, mock_logger, mock_get):
         """Test that get_devices logs an error and falls back to cache on API Auth Error."""
         # 1. Populate the cache manually
