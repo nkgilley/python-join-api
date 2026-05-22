@@ -1,7 +1,10 @@
 """Python API for using Join by joaoapps."""
+import hashlib
+import json
+import os
+import tempfile
 import requests
-from flask import request, Response, Flask
-import os 
+from flask import request, Response, Flask 
 
 SEND_URL = "https://joinjoaomgcd.appspot.com/_ah/api/messaging/v1/sendPush?apikey="
 LIST_URL = "https://joinjoaomgcd.appspot.com/_ah/api/registration/v1/listDevices?apikey="
@@ -72,11 +75,69 @@ class Listener:
             raise Exception("Unable to get public IP")
         return r.text
     
+def _get_cache_path(api_key):
+    """Generate a safe cache file path based on a hashed API key."""
+    try:
+        hashed_key = hashlib.sha256(api_key.encode('utf-8')).hexdigest()
+    except Exception:
+        return None
+
+    # Try standard user cache directory first, fall back to system temp
+    for base in [
+        os.path.join(os.path.expanduser("~"), ".cache", "pyjoin"),
+        os.path.join(tempfile.gettempdir(), "pyjoin")
+    ]:
+        try:
+            os.makedirs(base, exist_ok=True)
+            # Verify write permissions
+            test_path = os.path.join(base, ".write_test")
+            with open(test_path, "w") as f:
+                f.write("")
+            os.remove(test_path)
+            return os.path.join(base, f"{hashed_key}.json")
+        except Exception:
+            continue
+    return None
+
+
 def get_devices(api_key):
-    response = requests.get(LIST_URL + api_key).json()
-    if response.get('success') and not response.get('userAuthError'):
-        return [(r['deviceName'], r['deviceId']) for r in response['records']]
-    return False
+    """Retrieve devices from Join API, with robust offline caching support."""
+    success = False
+    devices = []
+    
+    try:
+        # Wrap the API call and JSON parsing to handle network outages gracefully
+        response = requests.get(LIST_URL + api_key, timeout=10)
+        response.raise_for_status()
+        resp_json = response.json()
+        if resp_json.get('success') and not resp_json.get('userAuthError'):
+            devices = [(r['deviceName'], r['deviceId']) for r in resp_json['records']]
+            success = True
+    except Exception:
+        # Network outage, timeout, or server error encountered
+        pass
+
+    if success:
+        # Successfully fetched from API; update cache
+        cache_path = _get_cache_path(api_key)
+        if cache_path:
+            try:
+                with open(cache_path, 'w') as fh:
+                    json.dump(devices, fh)
+            except Exception:
+                # Fail silently if cache is unwritable to avoid disrupting normal API operations
+                pass
+        return devices
+    else:
+        # Fetch failed; try loading from offline cache
+        cache_path = _get_cache_path(api_key)
+        if cache_path and os.path.isfile(cache_path):
+            try:
+                with open(cache_path, 'r') as fh:
+                    return json.load(fh)
+            except Exception:
+                pass
+        return False
 
 def send_notification(api_key, text, device_id=None, device_ids=None, device_names=None, title=None, icon=None, smallicon=None, vibration=None, image=None, url=None, tts=None, tts_language=None, sound=None, notification_id=None, category=None, actions=None):
     if device_id is None and device_ids is None and device_names is None: return False
